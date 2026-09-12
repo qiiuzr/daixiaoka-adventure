@@ -796,7 +796,7 @@ export default function Home() {
         });
       }
       video.currentTime = 0;
-      video.playbackRate = mode === 'photo-interaction' ? 1.18 : 1;
+      video.playbackRate = mode === 'photo-wall' ? 1.55 : mode === 'photo-interaction' ? 1.18 : 1;
       await video.play();
       if (!mounted.current) return;
       if (typeof video.requestVideoFrameCallback === 'function') {
@@ -1117,6 +1117,17 @@ export default function Home() {
           onEnded={(event) => {
             if (!showCamp) return;
             finishCampSegment(event.currentTarget);
+          }}
+          onTimeUpdate={(event) => {
+            const video = event.currentTarget;
+            if (
+              campPlaybackMode.current === 'photo-wall' &&
+              pendingPlay.current &&
+              Number.isFinite(video.duration) &&
+              video.currentTime >= video.duration - 0.35
+            ) {
+              finishCampSegment(video);
+            }
           }}
           onError={() => {
             if (!showCamp) return;
