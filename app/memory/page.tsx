@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import { RotateCcw, Sparkles } from 'lucide-react';
 import { BackgroundMusic } from '@/components/BackgroundMusic';
 import './memory.css';
@@ -155,7 +154,7 @@ export default function MemoryGame() {
                   <h2 id="victory-title">继续和呆小咖一起玩吧</h2>
                   <div className="memory-journey-grid">
                     {JOURNEY_DESTINATIONS.map((destination) => (
-                      <Link key={destination.href} href={destination.href} prefetch>{destination.label}</Link>
+                      <a key={destination.href} href={destination.href}>{destination.label}</a>
                     ))}
                   </div>
                 </>

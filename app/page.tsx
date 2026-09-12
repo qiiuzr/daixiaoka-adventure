@@ -68,6 +68,19 @@ function initialCampVideoForScene(scene: string | null) {
   return CAMP_VIDEO.travel;
 }
 
+function seekVideo(video: HTMLVideoElement, time: number) {
+  return new Promise<void>((resolve) => {
+    const target = Math.max(0, Math.min(time, Number.isFinite(video.duration) ? video.duration : time));
+    if (Math.abs(video.currentTime - target) < 0.025) {
+      resolve();
+      return;
+    }
+    const done = () => resolve();
+    video.addEventListener('seeked', done, { once: true });
+    video.currentTime = target;
+  });
+}
+
 function GlobalClickEffects() {
   const [effects, setEffects] = useState<ClickEffect[]>([]);
   const idRef = useRef(0);
@@ -448,13 +461,17 @@ export default function Home() {
     setPhase('camp-idle');
   }
 
-  function finishStageSegment(video: HTMLVideoElement) {
+  async function finishStageSegment(video: HTMLVideoElement) {
     const stopAt = stagePlaybackEnd.current;
+    const mode = stagePlaybackMode.current;
     cancelStageFrame();
     video.pause();
-    video.currentTime = stopAt;
+    // After the dance, hold on the same dim stage frame used before the lights come up.
+    // The curtain action still resumes from the real end of the dance below.
+    await seekVideo(video, mode === 'dance' ? STAGE_CLIP.ready : stopAt);
+    if (!mounted.current) return;
     pendingPlay.current = false;
-    setPhase(stagePlaybackMode.current === 'entry' ? 'stage-ready' : 'stage-choice');
+    setPhase(mode === 'entry' ? 'stage-ready' : 'stage-choice');
   }
 
   function watchStageSegment(video: HTMLVideoElement) {
@@ -638,7 +655,7 @@ export default function Home() {
     }
   }
 
-  function enterClothingStore() {
+  async function enterClothingStore() {
     if (phase !== 'outfit-store' || pendingPlay.current) return;
     pendingPlay.current = true;
     setPlaybackError(null);
@@ -650,14 +667,17 @@ export default function Home() {
     // Keep the complete entrance and facial-expression beat before the first outfit begins.
     outfitChangeEnd.current = 6.58;
     video.pause();
-    video.currentTime = 0;
-    void video.play().then(() => watchOutfitSegment(video)).catch(() => {
+    try {
+      await seekVideo(video, 0);
+      await video.play();
+      watchOutfitSegment(video);
+    } catch {
       pendingPlay.current = false;
       setPhase('wardrobe');
-    });
+    }
   }
 
-  function chooseOutfit(outfit: typeof OUTFITS[number]) {
+  async function chooseOutfit(outfit: typeof OUTFITS[number]) {
     if (!['wardrobe', 'dressed'].includes(phase) || pendingPlay.current) return;
     pendingPlay.current = true;
     setPlaybackError(null);
@@ -668,11 +688,14 @@ export default function Home() {
     outfitPlaybackMode.current = 'change';
     outfitChangeEnd.current = outfit.end;
     video.pause();
-    video.currentTime = outfit.start;
-    void video.play().then(() => watchOutfitSegment(video)).catch(() => {
+    try {
+      await seekVideo(video, outfit.start);
+      await video.play();
+      watchOutfitSegment(video);
+    } catch {
       pendingPlay.current = false;
       setPhase('dressed');
-    });
+    }
   }
 
   function leaveClothingStore() {
@@ -733,7 +756,8 @@ export default function Home() {
       if (video.error) video.load();
       stagePlaybackMode.current = 'entry';
       stagePlaybackEnd.current = STAGE_CLIP.ready;
-      video.currentTime = 0;
+      video.pause();
+      await seekVideo(video, 0);
       if (typeof video.requestVideoFrameCallback === 'function') {
         const id = video.requestVideoFrameCallback(() => {
           frameRequest.current = null;
@@ -867,7 +891,7 @@ export default function Home() {
     window.location.assign('/memory');
   }
 
-  function startStagePerformance() {
+  async function startStagePerformance() {
     const video = stageDanceRef.current;
     if (!video || !['stage-ready', 'stage-choice'].includes(phase) || pendingPlay.current) return;
     pendingPlay.current = true;
@@ -877,18 +901,19 @@ export default function Home() {
     cancelStageFrame();
     video.pause();
     video.playbackRate = 1;
-    video.currentTime = STAGE_CLIP.ready;
     setPhase('stage-dancing');
-    void video.play().then(() => {
+    try {
+      await seekVideo(video, STAGE_CLIP.ready);
+      await video.play();
       if (typeof video.requestVideoFrameCallback === 'function') watchStageSegment(video);
-    }).catch(() => {
+    } catch {
       pendingPlay.current = false;
       setPhase('stage-ready');
       setPlaybackError('暂时没能开始表演，再点一下试试。');
-    });
+    }
   }
 
-  function finishStagePerformance() {
+  async function finishStagePerformance() {
     const video = stageDanceRef.current;
     if (!video || phase !== 'stage-choice' || pendingPlay.current) return;
     pendingPlay.current = true;
@@ -896,15 +921,17 @@ export default function Home() {
     stagePlaybackMode.current = 'curtain';
     cancelStageFrame();
     video.pause();
-    video.currentTime = STAGE_CLIP.danceEnd;
     video.playbackRate = 1.35;
     setPhase('stage-curtain');
-    void video.play().catch(() => {
+    try {
+      await seekVideo(video, STAGE_CLIP.danceEnd);
+      await video.play();
+    } catch {
       pendingPlay.current = false;
       video.playbackRate = 1;
       setPhase('stage-choice');
       setPlaybackError('暂时没能完成谢幕，再点一下试试。');
-    });
+    }
   }
 
   const showingBookContent = phase === 'book-playing' || phase === 'reading' || phase === 'book-closing';
@@ -1053,8 +1080,8 @@ export default function Home() {
               setPhase('wardrobe');
             }}
           />
-          {phase === 'dressed' && selectedOutfit === '/outfit-07.png' && (
-            <img className="outfit-clean-hold" src="/outfit-prince-video-clean.png" alt="" draggable={false} />
+          {phase === 'dressed' && selectedOutfit && (
+            <img className="outfit-clean-hold" src={selectedOutfit === '/outfit-07.png' ? '/outfit-prince-video-clean.png' : selectedOutfit} alt="" draggable={false} />
           )}
         </div>
         <video
@@ -1098,6 +1125,7 @@ export default function Home() {
             finishStageSegment(event.currentTarget);
           }}
           onEnded={() => {
+            if (phase !== 'stage-curtain' || stagePlaybackMode.current !== 'curtain') return;
             cancelStageFrame();
             cancelPendingFrame();
             pendingPlay.current = false;
