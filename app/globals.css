@@ -866,10 +866,6 @@ button:disabled .interaction-label { visibility: hidden; }
 .photo-wall-hotspot {
   position: absolute;
   z-index: 24;
-  top: 29%;
-  right: 8%;
-  width: clamp(150px, 25vw, 440px);
-  height: clamp(170px, 48vh, 520px);
   padding: 0;
   border: 0;
   border-radius: 12%;
@@ -879,8 +875,8 @@ button:disabled .interaction-label { visibility: hidden; }
 }
 
 .photo-wall-hotspot .camp-interaction-cue {
-  left: 50%;
-  top: 50%;
+  left: 78%;
+  top: 78%;
 }
 
 .photo-wall-hotspot:focus-visible { outline: 3px solid #fff9de; outline-offset: 5px; }
@@ -934,15 +930,6 @@ button:disabled .interaction-label { visibility: hidden; }
   left: 50%;
   bottom: max(clamp(28px, 8vh, 92px), env(safe-area-inset-bottom));
   transform: translateX(-50%);
-}
-
-@media (orientation: portrait) {
-  .photo-wall-hotspot {
-    top: 30%;
-    right: 4%;
-    width: 42vw;
-    height: 42vh;
-  }
 }
 
 .stage-control {

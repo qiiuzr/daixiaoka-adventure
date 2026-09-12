@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { MousePointerClick } from 'lucide-react';
 import { positionHotspot, positionInteractionLabel, SCENE_HOTSPOTS } from '@/lib/scene-hotspots';
 import { BOOK_CLIP, BOOK_PAGE, bookSceneLayout, holdVideoFrame, isBookTap, resumeBookClosing } from '@/lib/book-scene';
@@ -51,6 +52,22 @@ const OUTFITS = [
   { id: 7, left: 89.2, width: 7.2, image: '/outfit-07.png', start: 18.62, end: 19.16 },
 ] as const;
 
+function initialPhaseForScene(scene: string | null): Phase {
+  if (scene === 'bookstore') return 'bookstore';
+  if (scene === 'outfit') return 'outfit-store';
+  if (scene === 'stage') return 'stage';
+  if (scene === 'camp') return 'camp-arrived';
+  if (scene === 'home') return 'home-inside';
+  if (scene === 'photos') return 'photo-wall';
+  return 'ready';
+}
+
+function initialCampVideoForScene(scene: string | null) {
+  if (scene === 'home') return HOME_VIDEO.enter;
+  if (scene === 'photos') return HOME_VIDEO.photoWall;
+  return CAMP_VIDEO.travel;
+}
+
 function GlobalClickEffects() {
   const [effects, setEffects] = useState<ClickEffect[]>([]);
   const idRef = useRef(0);
@@ -95,6 +112,7 @@ function GlobalClickEffects() {
 }
 
 export default function Home() {
+  const requestedScene = useSearchParams().get('scene');
   const sceneRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const travelRef = useRef<HTMLVideoElement>(null);
@@ -117,7 +135,7 @@ export default function Home() {
   const pendingPlay = useRef(false);
   const frameRequest = useRef<{ video: HTMLVideoElement; id: number } | null>(null);
   const mounted = useRef(true);
-  const [phase, setPhase] = useState<Phase>('ready');
+  const [phase, setPhase] = useState<Phase>(() => initialPhaseForScene(requestedScene));
   const [soundMuted, setSoundMuted] = useState(false);
   const [bellStyle, setBellStyle] = useState<CSSProperties>();
   const [bedStyle, setBedStyle] = useState<CSSProperties>();
@@ -128,6 +146,7 @@ export default function Home() {
   const [stageEntryStyle, setStageEntryStyle] = useState<CSSProperties>();
   const [campArrivalStyle, setCampArrivalStyle] = useState<CSSProperties>();
   const [campHomeStyle, setCampHomeStyle] = useState<CSSProperties>();
+  const [photoWallStyle, setPhotoWallStyle] = useState<CSSProperties>();
   const [campObjectStyles, setCampObjectStyles] = useState<Record<CampInteraction, CSSProperties>>();
   const [photoItemStyles, setPhotoItemStyles] = useState<CSSProperties[]>([]);
   const [outfitChoiceStyles, setOutfitChoiceStyles] = useState<CSSProperties[]>([]);
@@ -155,7 +174,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const requestedScene = new URLSearchParams(window.location.search).get('scene');
     if (requestedScene === 'bookstore' || requestedScene === 'outfit') {
       const video = requestedScene === 'bookstore' ? travelRef.current : outfitRef.current;
       if (!video) return;
@@ -253,7 +271,7 @@ export default function Home() {
 
     video.addEventListener('loadedmetadata', openCampPreview, { once: true });
     return () => video.removeEventListener('loadedmetadata', openCampPreview);
-  }, []);
+  }, [requestedScene]);
 
   useEffect(() => {
     const scene = sceneRef.current;
@@ -293,6 +311,12 @@ export default function Home() {
       setStageEntryStyle(positionHotspot(viewport, stageSize, SCENE_HOTSPOTS.stageEntrance));
       setCampArrivalStyle(positionHotspot(viewport, campSize, SCENE_HOTSPOTS.campArrival));
       setCampHomeStyle(positionHotspot(viewport, campSize, SCENE_HOTSPOTS.campHomeBed));
+      setPhotoWallStyle(positionHotspot(viewport, campSize, {
+        centerX: 0.226,
+        top: 0.07,
+        width: 0.13,
+        height: 0.29,
+      }));
       setCampObjectStyles({
         chair: positionHotspot(viewport, campSize, SCENE_HOTSPOTS.campChair),
         coffee: positionHotspot(viewport, campSize, SCENE_HOTSPOTS.campCoffee),
@@ -1086,7 +1110,7 @@ export default function Home() {
         <video
           ref={campRef}
           className={`opening-video camp-video ${showCamp ? 'is-visible' : ''}`}
-          src={CAMP_VIDEO.travel}
+          src={initialCampVideoForScene(requestedScene)}
           muted={soundMuted}
           preload="auto"
           playsInline
@@ -1270,7 +1294,7 @@ export default function Home() {
             <div className="photo-wall-copy">
               <SceneDepthText lines={['点击照片墙', '看看呆小咖平常都在干些什么吧']} />
             </div>
-            <button type="button" className="photo-wall-hotspot" onClick={enterPhotoWall} aria-label="点击照片墙，看看呆小咖平常都在干些什么">
+            <button type="button" className="photo-wall-hotspot" style={photoWallStyle} onClick={enterPhotoWall} aria-label="点击照片墙，看看呆小咖平常都在干些什么">
               <span className="camp-interaction-cue" aria-hidden="true"><MousePointerClick /></span>
             </button>
           </>
