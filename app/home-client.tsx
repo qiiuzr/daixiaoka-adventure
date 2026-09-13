@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { MousePointerClick } from 'lucide-react';
 import { positionHotspot, positionInteractionLabel, SCENE_HOTSPOTS } from '@/lib/scene-hotspots';
 import { BOOK_CLIP, BOOK_PAGE, bookSceneLayout, holdVideoFrame, isBookTap, resumeBookClosing } from '@/lib/book-scene';
@@ -53,16 +52,6 @@ const OUTFITS = [
   { id: 6, left: 81.0, width: 7.5, image: assetPath('/outfit-06.png'), start: 16.62, end: 18.54 },
   { id: 7, left: 89.2, width: 7.2, image: assetPath('/outfit-07.png'), start: 18.62, end: 19.16 },
 ] as const;
-
-function initialPhaseForScene(scene: string | null): Phase {
-  if (scene === 'bookstore') return 'bookstore';
-  if (scene === 'outfit') return 'outfit-store';
-  if (scene === 'stage') return 'stage';
-  if (scene === 'camp') return 'camp-arrived';
-  if (scene === 'home') return 'home-inside';
-  if (scene === 'photos') return 'photo-wall';
-  return 'ready';
-}
 
 function initialCampVideoForScene(scene: string | null) {
   if (scene === 'home') return HOME_VIDEO.enter;
@@ -137,7 +126,7 @@ function GlobalClickEffects() {
 }
 
 export default function Home() {
-  const requestedScene = useSearchParams().get('scene');
+  const [requestedScene, setRequestedScene] = useState<string | null>(null);
   const sceneRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const travelRef = useRef<HTMLVideoElement>(null);
@@ -160,7 +149,7 @@ export default function Home() {
   const pendingPlay = useRef(false);
   const frameRequest = useRef<{ video: HTMLVideoElement; id: number } | null>(null);
   const mounted = useRef(true);
-  const [phase, setPhase] = useState<Phase>(() => initialPhaseForScene(requestedScene));
+  const [phase, setPhase] = useState<Phase>('ready');
   const [soundMuted, setSoundMuted] = useState(false);
   const [bellStyle, setBellStyle] = useState<CSSProperties>();
   const [bedStyle, setBedStyle] = useState<CSSProperties>();
@@ -185,6 +174,10 @@ export default function Home() {
   const [completedCampInteractions, setCompletedCampInteractions] = useState<CampInteraction[]>([]);
   const [campHoldFrame, setCampHoldFrame] = useState<string | null>(null);
   const [leftCamp, setLeftCamp] = useState(false);
+
+  useEffect(() => {
+    setRequestedScene(new URLSearchParams(window.location.search).get('scene'));
+  }, []);
 
   useEffect(() => {
     mounted.current = true;
