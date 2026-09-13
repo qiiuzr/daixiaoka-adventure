@@ -31,7 +31,8 @@ jobs:
         env:
           NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
         run: pnpm build
-      - run: touch dist/client/.nojekyll
+      - name: Prepare static assets for GitHub Pages
+        run: node scripts/prepare-github-pages.mjs
       - uses: actions/configure-pages@v5
         with:
           enablement: true
