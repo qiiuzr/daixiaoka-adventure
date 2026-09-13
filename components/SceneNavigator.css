@@ -1,0 +1,90 @@
+.scene-navigator {
+  position: fixed;
+  z-index: 80;
+  top: 50%;
+  right: max(14px, env(safe-area-inset-right));
+  width: clamp(112px, 9.5vw, 152px);
+  padding: 10px;
+  border: 1px solid rgb(255 244 196 / 62%);
+  border-radius: 22px;
+  background: rgb(32 27 48 / 72%);
+  box-shadow: 0 14px 38px rgb(14 12 30 / 28%);
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transform: translateY(-50%);
+  backdrop-filter: blur(10px);
+}
+
+.scene-navigator-title {
+  display: block;
+  padding: 3px 4px 8px;
+  color: #ffeaa6;
+  font-size: clamp(.875rem, .85vw, 1rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: .06em;
+  text-align: center;
+  text-shadow: 0 2px 4px rgb(20 12 6 / 70%);
+}
+
+.scene-navigator-links {
+  display: grid;
+  gap: 6px;
+}
+
+.scene-navigator a {
+  display: grid;
+  min-height: 42px;
+  padding: 7px 8px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: #fff5ca;
+  background: rgb(255 255 255 / 9%);
+  font-size: clamp(.875rem, .95vw, 1.05rem);
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  text-shadow: 0 2px 3px rgb(20 10 4 / 76%);
+  transition: transform 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+.scene-navigator a:hover {
+  color: #55330c;
+  background: #ffedaa;
+  text-shadow: none;
+  transform: translateX(-2px);
+}
+
+.scene-navigator a.is-active {
+  border-color: rgb(255 245 197 / 82%);
+  color: #5c390d;
+  background: #ffe487;
+  box-shadow: 0 4px 12px rgb(255 214 91 / 24%);
+  text-shadow: none;
+}
+
+.scene-navigator a:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .scene-navigator {
+    right: max(7px, env(safe-area-inset-right));
+    width: 98px;
+    padding: 7px;
+    border-radius: 18px;
+  }
+
+  .scene-navigator-title { padding-bottom: 6px; }
+  .scene-navigator-links { gap: 4px; }
+  .scene-navigator a { min-height: 38px; padding: 5px 4px; font-size: .875rem; }
+}
+
+@media (max-height: 560px) {
+  .scene-navigator { padding: 6px; }
+  .scene-navigator-title { display: none; }
+  .scene-navigator-links { gap: 3px; }
+  .scene-navigator a { min-height: 32px; padding-block: 3px; }
+}

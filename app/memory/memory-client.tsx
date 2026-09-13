@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { RotateCcw, Sparkles } from 'lucide-react';
 import { BackgroundMusic } from '@/components/BackgroundMusic';
+import { SceneNavigator } from '@/components/SceneNavigator';
 import { assetPath, sitePath } from '@/lib/asset-path';
 import './memory.css';
 
@@ -185,6 +186,7 @@ export default function MemoryGame() {
         muted={soundMuted}
         onToggle={() => setSoundMuted((current) => !current)}
       />
+      <SceneNavigator active="memory" />
     </main>
   );
 }

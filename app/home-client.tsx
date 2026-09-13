@@ -8,6 +8,7 @@ import { BOOK_CLIP, BOOK_PAGE, bookSceneLayout, holdVideoFrame, isBookTap, resum
 import { BackgroundMusic } from '@/components/BackgroundMusic';
 import { SceneDepthText } from '@/components/SceneDepthText';
 import { CrayonProfile } from '@/components/CrayonProfile';
+import { SceneNavigator, type NavigationScene } from '@/components/SceneNavigator';
 import { assetPath, sitePath } from '@/lib/asset-path';
 
 type Phase = 'ready' | 'starting' | 'playing' | 'finished' | 'travel-starting' | 'traveling' | 'bookstore' | 'book-starting' | 'book-playing' | 'reading' | 'book-closing' | 'outfit-starting' | 'outfit-traveling' | 'outfit-store' | 'clothing-entering' | 'wardrobe' | 'changing' | 'dressed' | 'clothing-exiting' | 'stage-starting' | 'stage-traveling' | 'stage' | 'stage-entering' | 'stage-entry-playing' | 'stage-ready' | 'stage-dancing' | 'stage-choice' | 'stage-curtain' | 'camp-starting' | 'camp-traveling' | 'camp-arrived' | 'camp-entering' | 'camp-idle' | 'camp-interacting' | 'camp-exiting' | 'home-starting' | 'home-traveling' | 'home-arrived' | 'home-entering' | 'home-inside' | 'photo-wall-entering' | 'photo-wall' | 'photo-wall-interacting' | 'home-exiting' | 'game-invitation';
@@ -67,6 +68,16 @@ function initialCampVideoForScene(scene: string | null) {
   if (scene === 'home') return HOME_VIDEO.enter;
   if (scene === 'photos') return HOME_VIDEO.photoWall;
   return CAMP_VIDEO.travel;
+}
+
+function navigationSceneForPhase(phase: Phase): NavigationScene | undefined {
+  if (['ready', 'starting', 'playing', 'finished'].includes(phase)) return 'wake';
+  if (['travel-starting', 'traveling', 'bookstore', 'book-starting', 'book-playing', 'reading', 'book-closing'].includes(phase)) return 'bookstore';
+  if (['outfit-starting', 'outfit-traveling', 'outfit-store', 'clothing-entering', 'wardrobe', 'changing', 'dressed', 'clothing-exiting'].includes(phase)) return 'outfit';
+  if (['stage-starting', 'stage-traveling', 'stage', 'stage-entering', 'stage-entry-playing', 'stage-ready', 'stage-dancing', 'stage-choice', 'stage-curtain'].includes(phase)) return 'stage';
+  if (['camp-starting', 'camp-traveling', 'camp-arrived', 'camp-entering', 'camp-idle', 'camp-interacting', 'camp-exiting'].includes(phase)) return 'camp';
+  if (phase === 'game-invitation') return 'memory';
+  return undefined;
 }
 
 function seekVideo(video: HTMLVideoElement, time: number) {
@@ -1449,6 +1460,7 @@ export default function Home() {
       <BackgroundMusic onPaper={showingBookContent}
         waiting={['ready', 'finished', 'bookstore', 'reading', 'outfit-store', 'wardrobe', 'dressed', 'stage', 'stage-entering', 'stage-ready', 'stage-choice', 'camp-arrived', 'camp-idle', 'home-arrived', 'home-inside', 'photo-wall', 'game-invitation'].includes(phase)}
         muted={soundMuted} onToggle={() => setSoundMuted((value) => !value)} />
+      <SceneNavigator active={navigationSceneForPhase(phase)} />
       <GlobalClickEffects />
     </main>
   );
