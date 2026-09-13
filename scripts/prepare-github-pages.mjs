@@ -1,27 +1,14 @@
-import { readFile, readdir, rename, writeFile } from 'node:fs/promises';
-import { extname, join } from 'node:path';
+import { rename, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 const outputDirectory = join(process.cwd(), 'dist', 'client');
-const frameworkDirectory = join(outputDirectory, '_next');
-const publicDirectory = join(outputDirectory, 'site-assets');
 const repositoryName = process.env.GITHUB_REPOSITORY?.split('/').at(-1) || 'daixiaoka-adventure';
-const originalPrefix = `/${repositoryName}/_next/`;
-const publicPrefix = `/${repositoryName}/site-assets/`;
-const textExtensions = new Set(['.css', '.html', '.js', '.json', '.map', '.txt']);
+const nestedBaseDirectory = join(outputDirectory, repositoryName);
+const nestedFrameworkDirectory = join(nestedBaseDirectory, '_next');
+const publicFrameworkDirectory = join(outputDirectory, '_next');
 
-async function rewriteReferences(directory) {
-  for (const entry of await readdir(directory, { withFileTypes: true })) {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) {
-      await rewriteReferences(path);
-    } else if (textExtensions.has(extname(entry.name))) {
-      const source = await readFile(path, 'utf8');
-      const rewritten = source.replaceAll(originalPrefix, publicPrefix);
-      if (rewritten !== source) await writeFile(path, rewritten);
-    }
-  }
-}
-
-await rewriteReferences(outputDirectory);
-await rename(frameworkDirectory, publicDirectory);
+// Vinext nests framework files below the configured base path. GitHub Pages
+// already provides that path in the public URL, so lift `_next` to this root.
+await rename(nestedFrameworkDirectory, publicFrameworkDirectory);
+await rm(nestedBaseDirectory, { recursive: true, force: true });
 await writeFile(join(outputDirectory, '.nojekyll'), '');
