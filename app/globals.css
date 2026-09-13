@@ -234,7 +234,7 @@ button:disabled .interaction-label { visibility: hidden; }
 .book-viewport.is-reading { overflow-x: auto; overscroll-behavior: contain; }
 .book-canvas {
   position: relative; width: 100%; height: 100%; container-type: inline-size;
-  background: #d7ad83 url('/reading-bookshelf.png') center / cover no-repeat;
+  background-color: #d7ad83; background-position: center; background-size: cover; background-repeat: no-repeat;
 }
 .book-video { object-fit: fill; }
 .book-profile {

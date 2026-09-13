@@ -1,7 +1,8 @@
 import type { SceneSize } from './scene-hotspots';
+import { assetPath } from './asset-path';
 
 export const BOOK_CLIP = {
-  src: '/book-opening-final.mp4',
+  src: assetPath('/book-opening-final.mp4'),
   width: 3184,
   height: 1792,
   // Pause after the opening motion has settled, on the character's open-eye frame.

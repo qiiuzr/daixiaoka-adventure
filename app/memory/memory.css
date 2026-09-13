@@ -5,7 +5,7 @@
   width: 100vw;
   height: 100svh;
   overflow: hidden;
-  background: #68a5f1 url('/memory/background.png') center / cover no-repeat;
+  background-color: #68a5f1; background-position: center; background-size: cover; background-repeat: no-repeat;
   color: var(--memory-ink);
   font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
 }
