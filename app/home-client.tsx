@@ -176,7 +176,10 @@ export default function Home() {
   const [leftCamp, setLeftCamp] = useState(false);
 
   useEffect(() => {
-    setRequestedScene(new URLSearchParams(window.location.search).get('scene'));
+    const syncSceneFromAddress = () => setRequestedScene(new URLSearchParams(window.location.search).get('scene'));
+    syncSceneFromAddress();
+    window.addEventListener('popstate', syncSceneFromAddress);
+    return () => window.removeEventListener('popstate', syncSceneFromAddress);
   }, []);
 
   useEffect(() => {
@@ -948,6 +951,34 @@ export default function Home() {
   const showCamp = ['camp-starting', 'camp-traveling', 'camp-arrived', 'camp-entering', 'camp-idle', 'camp-interacting', 'camp-exiting', 'home-starting', 'home-traveling', 'home-arrived', 'home-entering', 'home-inside', 'photo-wall-entering', 'photo-wall', 'photo-wall-interacting', 'home-exiting', 'game-invitation'].includes(phase);
   const showChangingRoom = ['clothing-entering', 'wardrobe', 'changing', 'dressed', 'clothing-exiting'].includes(phase);
 
+  function navigateFromSidebar(scene: NavigationScene) {
+    if (scene === 'memory') {
+      window.location.assign(sitePath('/memory'));
+      return;
+    }
+
+    cancelPendingFrame();
+    pendingPlay.current = false;
+    setPlaybackError(null);
+    [videoRef.current, travelRef.current, bookRef.current, outfitRef.current, stageRef.current, stageDanceRef.current, campRef.current, outfitChangeRef.current]
+      .forEach((video) => video?.pause());
+
+    if (scene === 'wake') {
+      window.history.pushState({}, '', sitePath('/'));
+      setRequestedScene(null);
+      setStorefrontSource('arrival');
+      setLeftClothingStore(false);
+      setFinishedStageShow(false);
+      setLeftCamp(false);
+      if (videoRef.current) videoRef.current.currentTime = 0;
+      setPhase('ready');
+      return;
+    }
+
+    window.history.pushState({}, '', sitePath(`/?scene=${scene}`));
+    setRequestedScene(scene);
+  }
+
   return (
     <main className={`experience phase-${phase}`}>
       <section ref={sceneRef} className="scene-frame" aria-label={showingBookContent ? '呆小咖的故事书' : phase === 'bookstore' ? '呆小咖抵达书店门口' : phase === 'outfit-store' ? '呆小咖抵达服装店' : '呆小咖的街道之旅'}>
@@ -1453,7 +1484,7 @@ export default function Home() {
       <BackgroundMusic onPaper={showingBookContent}
         waiting={['ready', 'finished', 'bookstore', 'reading', 'outfit-store', 'wardrobe', 'dressed', 'stage', 'stage-entering', 'stage-ready', 'stage-choice', 'camp-arrived', 'camp-idle', 'home-arrived', 'home-inside', 'photo-wall', 'game-invitation'].includes(phase)}
         muted={soundMuted} onToggle={() => setSoundMuted((value) => !value)} />
-      <SceneNavigator active={navigationSceneForPhase(phase)} />
+      <SceneNavigator active={navigationSceneForPhase(phase)} onNavigate={navigateFromSidebar} />
       <GlobalClickEffects />
     </main>
   );
